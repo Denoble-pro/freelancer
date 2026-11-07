@@ -15,6 +15,7 @@
     "dev:api": "npm run dev -w @dlp/api",
     "dev:web": "npm run dev -w @dlp/web",
     "build": "npm run build -w @dlp/web",
+    "start:render": "npm run db:deploy && npm run db:bootstrap && concurrently -k -n api,web \"npm run start -w @dlp/api\" \"npx next start apps/web -p $PORT\"",
     "typecheck": "npm run typecheck -w @dlp/shared && npm run typecheck -w @dlp/db && npm run typecheck -w @dlp/api && npm run typecheck -w @dlp/web",
     "test": "npm run test -w @dlp/api",
     "test:watch": "npm run test:watch -w @dlp/api",
