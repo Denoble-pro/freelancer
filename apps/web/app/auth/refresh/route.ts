@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchApi } from "@/lib/upstream";
 
 const ACCESS_COOKIE = process.env.ACCESS_COOKIE_NAME ?? "dlp_access";
 const REFRESH_COOKIE = process.env.REFRESH_COOKIE_NAME ?? "dlp_refresh";
-const API_URL = process.env.API_INTERNAL_URL ?? "http://localhost:4000";
 
 function safeNext(value: string | null): string {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : "/account";
@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
   if (!refresh) return NextResponse.redirect(loginUrl);
 
   try {
-    const response = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+    const response = await fetchApi("/api/v1/auth/refresh", {
       method: "POST",
       headers: { cookie: `${REFRESH_COOKIE}=${refresh}` },
-      cache: "no-store",
+      signal: AbortSignal.timeout(20_000),
     });
 
     if (!response.ok) {
