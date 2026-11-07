@@ -36,10 +36,11 @@ export async function GET() {
         body: (await response.text()).slice(0, 300),
       });
     } catch (error) {
+      const cause = (error as { cause?: { code?: string } } | undefined)?.cause;
       checks.push({
         host: hostOf(target),
         ms: Date.now() - startedAt,
-        error: error instanceof Error ? error.name : "Error",
+        error: cause?.code ?? (error instanceof Error ? error.name : "Error"),
       });
     }
   }
