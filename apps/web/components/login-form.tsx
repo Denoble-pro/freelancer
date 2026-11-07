@@ -43,8 +43,9 @@ export function LoginForm({ content, supportEmail, nextPath }: LoginFormProps) {
         { data?: { redirectTo?: string } } | { error?: { code?: string; message?: string } } | null;
 
       if (!response.ok) {
-        const code = payload && "error" in payload ? payload.error?.code : undefined;
-        if (response.status >= 500) setError(t("auth.login.errorNoConnection"));
+        const errorPayload = payload && "error" in payload ? payload.error : undefined;
+        const code = errorPayload?.code;
+        if (!errorPayload) setError(t("auth.login.errorNoConnection"));
         else if (code === "INVALID_CREDENTIALS") setError(t("auth.login.errorInvalid"));
         else if (code === "ACCOUNT_INACTIVE") setError(t("auth.login.errorSuspended"));
         else if (code === "TOO_MANY_REQUESTS") setError(t("auth.login.errorRateLimit"));

@@ -101,7 +101,8 @@ export type AdminStats = {
   audit: number | null;
 };
 
-const apiBase = process.env.API_INTERNAL_URL ?? "http://localhost:4000";
+const apiBase =
+  process.env.API_INTERNAL_URL ?? process.env.API_PUBLIC_URL ?? "http://localhost:4000";
 
 function fallbackBootstrap(): Bootstrap {
   const menus: Record<string, MenuItemData[]> = {};

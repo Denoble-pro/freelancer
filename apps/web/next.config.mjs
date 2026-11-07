@@ -2,7 +2,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const apiInternalUrl = process.env.API_INTERNAL_URL ?? "http://localhost:4000";
+const apiInternalUrl =
+  process.env.API_INTERNAL_URL ?? process.env.API_PUBLIC_URL ?? "http://localhost:4000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
