@@ -44,7 +44,8 @@ async function ensureAdmin() {
     return;
   }
   if (!password) {
-    throw new Error("bootstrap: SEED_ADMIN_PASSWORD is required when SEED_ADMIN_EMAIL is set.");
+    console.warn("bootstrap: SEED_ADMIN_PASSWORD is not set, skipping admin sync.");
+    return;
   }
 
   const existing = await db.user.findUnique({ where: { email: rawEmail } });

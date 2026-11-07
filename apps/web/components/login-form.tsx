@@ -36,6 +36,7 @@ export function LoginForm({ content, supportEmail, nextPath }: LoginFormProps) {
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(45_000),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -43,7 +44,8 @@ export function LoginForm({ content, supportEmail, nextPath }: LoginFormProps) {
 
       if (!response.ok) {
         const code = payload && "error" in payload ? payload.error?.code : undefined;
-        if (code === "INVALID_CREDENTIALS") setError(t("auth.login.errorInvalid"));
+        if (response.status >= 500) setError(t("auth.login.errorNoConnection"));
+        else if (code === "INVALID_CREDENTIALS") setError(t("auth.login.errorInvalid"));
         else if (code === "ACCOUNT_INACTIVE") setError(t("auth.login.errorSuspended"));
         else if (code === "TOO_MANY_REQUESTS") setError(t("auth.login.errorRateLimit"));
         else setError(t("auth.login.errorGeneric"));
