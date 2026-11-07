@@ -23,6 +23,7 @@ import {
   Star,
   Store,
   ToggleLeft,
+  Trash2,
   Type,
   UserPlus,
   Users,
@@ -1350,6 +1351,7 @@ function UserRow({
   const [notice, setNotice] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const [revoking, setRevoking] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -1435,6 +1437,23 @@ function UserRow({
   }
 
   const dirty = role !== user.role || status !== user.status;
+
+  async function deleteUser() {
+    if (!window.confirm(t("admin.users.deleteConfirm", { name: user.name }))) return;
+    setDeleting(true);
+    setNotice(null);
+    try {
+      await adminApi(`/admin/users/${user.id}`, { method: "DELETE" });
+      onChanged();
+    } catch (cause) {
+      setNotice({
+        message: cause instanceof Error ? cause.message : t("admin.users.deleteError"),
+        tone: "error",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="card p-5">
@@ -1550,6 +1569,22 @@ function UserRow({
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               {resetting ? t("admin.users.resetting") : t("admin.users.reset")}
+            </button>
+          ) : null}
+          {user.role === "staff" || user.role === "client" ? (
+            <button
+              type="button"
+              onClick={() => void deleteUser()}
+              disabled={deleting}
+              className="btn btn-secondary btn-sm text-danger"
+              title="Delete this account"
+            >
+              {deleting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {deleting ? t("admin.users.deleting") : t("admin.users.delete")}
             </button>
           ) : null}
         </div>

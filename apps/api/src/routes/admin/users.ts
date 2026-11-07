@@ -332,6 +332,53 @@ export const adminUserRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
+  app.delete(
+    "/admin/users/:id",
+    { preHandler: [authenticate, authorize("users.write")] },
+    async (request) => {
+      const principal = currentPrincipal(request);
+      const params = parseInput(paramsSchema, request.params);
+
+      const user = await db.user.findFirst({
+        where: { id: params.id, deletedAt: null },
+        select: { id: true, name: true, email: true, role: true, status: true },
+      });
+      if (!user) throw notFound("That user does not exist.");
+      if (user.role === "admin") {
+        throw badRequest("Administrator accounts cannot be deleted.");
+      }
+
+      const now = new Date();
+      const revoked = await db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: user.id },
+          data: {
+            deletedAt: now,
+            status: "suspended",
+            suspendedReason: "Account deleted by management.",
+          },
+        });
+        const result = await tx.session.updateMany({
+          where: { userId: user.id, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        return result.count;
+      });
+
+      await writeAudit({
+        actorId: principal.user.id,
+        action: "user.delete",
+        entityType: "user",
+        entityId: user.id,
+        before: { name: user.name, email: user.email, role: user.role, status: user.status },
+        after: { deletedAt: now.toISOString(), sessionsRevoked: revoked },
+        request,
+      });
+
+      return { data: { success: true, sessionsRevoked: revoked } };
+    },
+  );
+
   app.post(
     "/admin/users/:id/revoke-sessions",
     { preHandler: [authenticate, authorize("users.write")] },

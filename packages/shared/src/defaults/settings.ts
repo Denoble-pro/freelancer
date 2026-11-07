@@ -350,11 +350,12 @@ export const settingDefaults: SettingDefinition[] = [
   {
     key: "security.sessionDays",
     label: "Session length (days)",
-    description: "How long a refresh session remains valid before signing the user out.",
+    description:
+      "How long a refresh session remains valid. Sessions roll forward on every refresh.",
     group: "Security",
     type: "number",
-    defaultValue: 30,
-    validation: { min: 1, max: 365 },
+    defaultValue: 365,
+    validation: { min: 1, max: 400 },
   },
   {
     key: "security.accessTokenMinutes",

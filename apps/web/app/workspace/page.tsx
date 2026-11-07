@@ -4,6 +4,7 @@ import { getWorkspace } from "@/lib/workspace";
 import { forwardedCookieHeader } from "@/lib/server";
 import { resolveLogo, wordmark } from "@/lib/theme";
 import { AppTopbar } from "@/components/app-topbar";
+import { SessionKeeper } from "@/components/session-keeper";
 import { WorkspaceClient } from "@/components/workspace-client";
 
 export default async function WorkspacePage() {
@@ -16,6 +17,7 @@ export default async function WorkspacePage() {
   if (!workspace) {
     return (
       <div className="min-h-screen">
+        <SessionKeeper />
         <AppTopbar
           me={me}
           content={bootstrap.content}
@@ -39,6 +41,7 @@ export default async function WorkspacePage() {
 
   return (
     <div className="min-h-screen">
+      <SessionKeeper />
       <AppTopbar
         me={me}
         content={bootstrap.content}

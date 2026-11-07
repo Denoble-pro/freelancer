@@ -5,6 +5,7 @@ import { forwardedCookieHeader } from "@/lib/server";
 import { resolveLogo, wordmark } from "@/lib/theme";
 import { AdminConsole } from "@/components/admin-console";
 import { AppTopbar } from "@/components/app-topbar";
+import { SessionKeeper } from "@/components/session-keeper";
 
 export default async function AdminPage() {
   const cookieHeader = await forwardedCookieHeader();
@@ -23,6 +24,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen">
+      <SessionKeeper />
       <AppTopbar me={me} content={bootstrap.content} wordmark={brandName} logoUrl={logoUrl} />
 
       <main className="container-page py-10 sm:py-12">

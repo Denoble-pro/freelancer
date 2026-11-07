@@ -1625,6 +1625,31 @@ export const contentDefaults: ContentDefinition[] = [
     defaultValue: "Temporary password reset. Previous sessions were signed out.",
   },
   {
+    key: "admin.users.delete",
+    group: "Admin",
+    label: "People: delete account action",
+    defaultValue: "Delete",
+  },
+  {
+    key: "admin.users.deleting",
+    group: "Admin",
+    label: "People: delete account submitting",
+    defaultValue: "Deleting...",
+  },
+  {
+    key: "admin.users.deleteConfirm",
+    group: "Admin",
+    label: "People: delete account confirmation",
+    defaultValue:
+      "Delete {name}? They will be signed out immediately and can no longer sign in. Their records are kept for audit history.",
+  },
+  {
+    key: "admin.users.deleteError",
+    group: "Admin",
+    label: "People: delete account error",
+    defaultValue: "That account could not be deleted.",
+  },
+  {
     key: "admin.users.tempTitleCreate",
     group: "Admin",
     label: "People: created credentials title",

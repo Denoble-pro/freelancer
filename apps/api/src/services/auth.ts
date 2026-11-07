@@ -70,11 +70,11 @@ export async function loadUser(userId: string): Promise<SafeUser | null> {
 
 async function sessionSettings() {
   const [sessionDays, accessMinutes] = await Promise.all([
-    getSettingValue<number>("security.sessionDays", 30),
+    getSettingValue<number>("security.sessionDays", 365),
     getSettingValue<number>("security.accessTokenMinutes", 15),
   ]);
   return {
-    sessionDays: Math.min(Math.max(sessionDays, 1), 365),
+    sessionDays: Math.min(Math.max(sessionDays, 1), 400),
     accessMinutes: Math.min(Math.max(accessMinutes, 5), 120),
   };
 }
@@ -207,12 +207,14 @@ export async function refreshSession(rawToken: string | undefined): Promise<Refr
     );
   }
 
-  const { accessMinutes } = await sessionSettings();
+  const { sessionDays, accessMinutes } = await sessionSettings();
   const newSecret = randomToken(48);
   const refreshToken = `${session.id}.${newSecret}`;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + sessionDays * 24 * 60 * 60 * 1000);
   await db.session.update({
     where: { id: session.id },
-    data: { tokenHash: sha256(newSecret), lastUsedAt: new Date() },
+    data: { tokenHash: sha256(newSecret), lastUsedAt: now, expiresAt },
   });
 
   const accessToken = await signAccessToken({
@@ -225,7 +227,7 @@ export async function refreshSession(rawToken: string | undefined): Promise<Refr
   const permissions = await permissionsForRole(session.user.role);
   const { deletedAt: _deletedAt, ...user } = session.user;
   void _deletedAt;
-  const refreshSeconds = Math.max(0, Math.floor((session.expiresAt.getTime() - Date.now()) / 1000));
+  const refreshSeconds = sessionDays * 24 * 60 * 60;
 
   return {
     user,

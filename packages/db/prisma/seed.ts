@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { hash } from "@node-rs/argon2";
 import { Prisma } from "@prisma/client";
+import { pathToFileURL } from "node:url";
 import {
   contentDefaults,
   featureFlagDefaults,
@@ -12,28 +13,15 @@ import {
 } from "@dlp/shared";
 import { db } from "../src/index.js";
 
-const ADMIN_ID = "11111111-1111-4111-8111-111111111101";
-const STAFF_IDS = [
-  "11111111-1111-4111-8111-111111111102",
-  "11111111-1111-4111-8111-111111111103",
-  "11111111-1111-4111-8111-111111111104",
-] as const;
-const CLIENT_IDS = [
-  "11111111-1111-4111-8111-111111111201",
-  "11111111-1111-4111-8111-111111111202",
-  "11111111-1111-4111-8111-111111111203",
-  "11111111-1111-4111-8111-111111111204",
-  "11111111-1111-4111-8111-111111111205",
-] as const;
-
-const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@denobelpro.local";
+const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@denobelpro.local").trim().toLowerCase();
 const adminName = process.env.SEED_ADMIN_NAME ?? "Denobelpro Management";
 const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe-Immediately-2026!";
 const demoPassword = process.env.SEED_DEMO_PASSWORD ?? "Denobelpro!2026";
+const clientPassword = process.env.SEED_CLIENT_PASSWORD ?? demoPassword;
 
 const json = (value: unknown) => value as Prisma.InputJsonValue;
 
-async function seedSettings() {
+export async function seedSettings() {
   for (const setting of settingDefaults) {
     const data = {
       label: setting.label,
@@ -59,7 +47,7 @@ async function seedSettings() {
   console.log(`  settings: ${settingDefaults.length} definitions ready`);
 }
 
-async function seedContent() {
+export async function seedContent() {
   for (const item of contentDefaults) {
     await db.contentString.upsert({
       where: { key: item.key },
@@ -81,7 +69,7 @@ async function seedContent() {
   console.log(`  content: ${contentDefaults.length} strings ready`);
 }
 
-async function seedTheme() {
+export async function seedTheme() {
   for (const token of themeDefaults) {
     await db.themeToken.upsert({
       where: { key: token.key },
@@ -103,7 +91,7 @@ async function seedTheme() {
   console.log(`  theme: ${themeDefaults.length} tokens ready`);
 }
 
-async function seedFeatureFlags() {
+export async function seedFeatureFlags() {
   for (const flag of featureFlagDefaults) {
     await db.featureFlag.upsert({
       where: { key: flag.key },
@@ -126,7 +114,7 @@ async function seedFeatureFlags() {
   console.log(`  feature flags: ${featureFlagDefaults.length} ready`);
 }
 
-async function seedRoles() {
+export async function seedRoles() {
   for (const definition of permissionDefinitions) {
     await db.permission.upsert({
       where: { key: definition.key },
@@ -171,7 +159,7 @@ async function seedRoles() {
   );
 }
 
-async function seedLanguages() {
+export async function seedLanguages() {
   await db.language.upsert({
     where: { code: "en" },
     update: { name: "English", direction: "ltr", enabled: true },
@@ -188,7 +176,7 @@ type CategorySeed = {
   sortOrder: number;
 };
 
-async function seedCategories(): Promise<Map<string, string>> {
+export async function seedCategories(): Promise<Map<string, string>> {
   const designId = "22222222-2222-4222-8222-222222222201";
   const categories: CategorySeed[] = [
     {
@@ -292,7 +280,7 @@ const taxonomySeed = [
   ["review_criterion", "delivery", "Delivery", "#0E7A5F", 30],
 ] as const;
 
-async function seedTaxonomies() {
+export async function seedTaxonomies() {
   for (const [type, key, label, color, sortOrder] of taxonomySeed) {
     await db.taxonomy.upsert({
       where: { type_key: { type, key } },
@@ -303,7 +291,7 @@ async function seedTaxonomies() {
   console.log(`  taxonomies: ${taxonomySeed.length} labels ready`);
 }
 
-async function seedMenus() {
+export async function seedMenus() {
   for (const menu of navigationDefaults) {
     const menuRecord = await db.menu.upsert({
       where: { key: menu.key },
@@ -329,7 +317,6 @@ async function seedMenus() {
 }
 
 type SeedUser = {
-  id: string;
   email: string;
   name: string;
   role: "admin" | "staff" | "client";
@@ -347,7 +334,6 @@ async function upsertUser(user: SeedUser) {
 
   return db.user.create({
     data: {
-      id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
@@ -361,7 +347,6 @@ async function upsertUser(user: SeedUser) {
 
 async function seedPeople() {
   const admin = await upsertUser({
-    id: ADMIN_ID,
     email: adminEmail,
     name: adminName,
     role: "admin",
@@ -399,7 +384,6 @@ async function seedPeople() {
   for (let index = 0; index < staffSeeds.length; index += 1) {
     const seed = staffSeeds[index]!;
     const user = await upsertUser({
-      id: STAFF_IDS[index]!,
       email: seed.email,
       name: seed.name,
       role: "staff",
@@ -454,11 +438,10 @@ async function seedPeople() {
   for (let index = 0; index < clientSeeds.length; index += 1) {
     const seed = clientSeeds[index]!;
     const user = await upsertUser({
-      id: CLIENT_IDS[index]!,
       email: seed.email,
       name: seed.name,
       role: "client",
-      password: demoPassword,
+      password: clientPassword,
     });
     await db.clientProfile.upsert({
       where: { userId: user.id },
@@ -801,7 +784,7 @@ const pageSeeds = [
   },
 ];
 
-async function seedPages() {
+export async function seedPages() {
   for (const page of pageSeeds) {
     const existing = await db.page.findUnique({ where: { slug: page.slug } });
     if (existing) continue;
@@ -861,11 +844,16 @@ async function main() {
   console.log("  Demo password comes from SEED_DEMO_PASSWORD.");
 }
 
-main()
-  .catch((error) => {
-    console.error("Seed failed:", error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await db.$disconnect();
-  });
+const isDirectRun =
+  typeof process.argv[1] === "string" && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  main()
+    .catch((error) => {
+      console.error("Seed failed:", error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await db.$disconnect();
+    });
+}
